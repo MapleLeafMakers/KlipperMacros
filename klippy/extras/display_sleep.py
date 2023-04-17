@@ -1,5 +1,12 @@
-import logging
-from .display.display import REDRAW_TIME, REDRAW_MIN_TIME
+# display_sleep.py - a basic blanking screensaver.
+#
+# Example Configuration:
+#
+#     [display_sleep]
+#     sleep_timeout: 300
+#     sleep_while_printing: False
+#
+# Source: https://github.com/MapleLeafMakers/KlipperMacros/klippy/extras/display_sleep.py
 
 
 class DisplaySleep:
@@ -19,7 +26,7 @@ class DisplaySleep:
             yield display
 
     def patch_display(self):
-        from .display.display import PrinterLCD
+        from .display.display import PrinterLCD, REDRAW_TIME, REDRAW_MIN_TIME
 
         def screen_update_event(self_, eventtime):
             if self_.redraw_request_pending:
