@@ -1,6 +1,6 @@
 # Klippy Extensions
 
-Just drop one of these into your ~/Klipper/klippy/extras folder to install it.
+Just drop one of these into your ~/klipper/klippy/extras folder to install it.
 
 ### display_sleep.py
 
