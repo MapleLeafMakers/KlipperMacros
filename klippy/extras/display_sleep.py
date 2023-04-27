@@ -61,6 +61,10 @@ class DisplaySleep:
             if d.screen_update_timer:
                 self.reactor.unregister_timer(d.screen_update_timer)
 
+        if hasattr(PrinterLCD, 'base_screen_update_event'):
+            # Unpatch
+            PrinterLCD.screen_update_event = PrinterLCD.base_screen_update_event
+
         PrinterLCD.base_screen_update_event = PrinterLCD.screen_update_event
         PrinterLCD.screen_update_event = screen_update_event
 
@@ -103,6 +107,13 @@ class DisplaySleep:
             self_.base_back()
 
         from .display.menu import MenuManager
+        if hasattr(MenuManager, 'base_click_callback'):
+            # Unpatch
+            MenuManager._click_callback = MenuManager.base_click_callback
+            MenuManager.up = MenuManager.base_up
+            MenuManager.down = MenuManager.base_down 
+            MenuManager.back = MenuManager.base_back 
+
         MenuManager.base_click_callback = MenuManager._click_callback
         MenuManager._click_callback = _click_callback
         MenuManager.base_up = MenuManager.up
