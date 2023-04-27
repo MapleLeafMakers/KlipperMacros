@@ -14,12 +14,19 @@ class DisplaySleep:
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
-        self.sleep_timeout = config.getint('sleep_timeout', 300)
+        self.sleep_timeout = config.getint('sleep_timeout', -1)
         self.sleep_while_printing = config.getboolean('sleep_while_printing', False)
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
         self.printer.register_event_handler("idle_timeout:printing", self.handle_printing)
         self.sleep_timer = self.reactor.register_timer(self.sleep)
         self.is_sleeping = False
+        self.gcode = self.printer.lookup_object('gcode')
+        self.gcode.register_command("DISPLAY_SLEEP",
+                                    self.cmd_DISPLAY_SLEEP,
+                                    desc=self.cmd_DISPLAY_SLEEP_help)
+        self.gcode.register_command("DISPLAY_WAKE",
+                                    self.cmd_DISPLAY_WAKE,
+                                    desc=self.cmd_DISPLAY_WAKE_help)
 
     def iter_displays(self):
         for _, display in self.printer.lookup_objects('display'):
@@ -119,16 +126,24 @@ class DisplaySleep:
         for display in self.iter_displays():
             display.request_redraw()
 
-    def sleep(self, eventtime):
+    def sleep(self, eventtime, force=False):
         idle_timeout = self.printer.lookup_object("idle_timeout")
         state = idle_timeout.get_status(eventtime)["state"]
-        if state == "Printing" and not self.sleep_while_printing:
+        if state == "Printing" and not force and not self.sleep_while_printing:
             return eventtime + self.sleep_timeout
         self.is_sleeping = True
         for display in self.iter_displays():
             display.request_redraw()
         return self.reactor.NEVER
 
+    cmd_DISPLAY_SLEEP_help = "Blanks the display until a key is pressed, or DISPLAY_WAKE is called."
+    def cmd_DISPLAY_SLEEP(self, gcmd):
+        self.sleep(self.reactor.monotonic(), force=True)
+
+    cmd_DISPLAY_WAKE_help = "Wakes the display."
+    def cmd_DISPLAY_WAKE(self, gcmd):
+        self.update_timer()
+        self.wake()
 
 def load_config(config):
     return DisplaySleep(config)
